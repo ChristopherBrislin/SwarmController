@@ -16,8 +16,8 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		
-		SerialPort[] portList = SerialPort.getCommPorts();
-		String[] portNames = new String[] {};
+		Interface gui = new Interface();
+		gui.interfaceStart();
 		
 		
 
