@@ -29,45 +29,56 @@ public class PortBuilder {
 
 	public void buildPort(SerialPort port) {
 		this.port = port;
-		this.port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 1000,1000); // default parameters used for non-blocking
+		this.port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0,0); // default parameters used for non-blocking
 		// serial poling
 		this.port.setBaudRate(57600);// default parameters used for data bits, parity and stop bits. To be added.
 		this.port.openPort();
-		if (this.port.isOpen()) {
+		
+		port.addDataListener(new SerialPortDataListener() {
+			   @Override
+			   public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_AVAILABLE; }
+			   @Override
+			   public void serialEvent(SerialPortEvent event)
+			   {
+			      if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
+			         return;
+			      
+			      try {
+						MavlinkConnection connection = MavlinkConnection.create(port.getInputStream(), port.getOutputStream());
+						MavlinkMessage message;
+						if ((message = connection.next()) != null) {
+							if (message instanceof Mavlink2Message) {
+								Mavlink2Message message2 = (Mavlink2Message) message;
+								System.out.println("Mavlink 2 message");
+								if (message2.isSigned()) {
+									System.out.println("Signed Mavlink 2 message");
+								} else {
+									// Message unsigned
+									System.out.println("Unsigned Message");
+								}
+							} else {
+								// Mavlink 1 message
+							}
+							
+							System.out.println(message.toString());
+						
 
-			System.out.println("Port Open");
-		}
-
-		try {
-			MavlinkConnection connection = MavlinkConnection.create(port.getInputStream(), port.getOutputStream());
-			MavlinkMessage message;
-			while ((message = connection.next()) != null) {
-				if (message instanceof Mavlink2Message) {
-					Mavlink2Message message2 = (Mavlink2Message) message;
-					System.out.println("Mavlink 2 message");
-					if (message2.isSigned()) {
-						System.out.println("Signed Mavlink 2 message");
-					} else {
-						// Message unsigned
-						System.out.println("Unsigned Message");
+						}
+					} catch (Exception ex) {
+						ex.printStackTrace();
 					}
-				} else {
-					// Mavlink 1 message
-				}
-				if (message.getPayload() instanceof Heartbeat) {
-					MavlinkMessage<Heartbeat> heartbeatMessage = (MavlinkMessage<Heartbeat>) message;
-					System.out.println(heartbeatMessage.toString());
-				}
+			      
+			   }
+			});
 
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+		
 
 	}
 
 	public void closePort() {
+		
 		this.port.closePort();
+		System.out.println("close port called");
 	}
 
 }

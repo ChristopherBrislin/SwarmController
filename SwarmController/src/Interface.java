@@ -63,6 +63,7 @@ public class Interface implements ActionListener{
 			portBuilder.buildPort((SerialPort)cb_ports.getSelectedItem());
 			break;
 		case("Close Port"):
+			System.out.println("trying to close port");
 			portBuilder.closePort();
 			break;
 		
