@@ -2,6 +2,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
@@ -11,6 +12,9 @@ import io.dronefleet.mavlink.Mavlink2Message;
 import io.dronefleet.mavlink.MavlinkConnection;
 import io.dronefleet.mavlink.MavlinkMessage;
 import io.dronefleet.mavlink.common.Heartbeat;
+import io.dronefleet.mavlink.common.Statustext;
+import io.dronefleet.mavlink.protocol.MavlinkPacket;
+import io.dronefleet.mavlink.protocol.MavlinkPacketReader;
 
 /**
  * 
@@ -19,19 +23,23 @@ import io.dronefleet.mavlink.common.Heartbeat;
 /**
  * Christopher Brislin 1 Nov 2020 SwarmController
  */
-public class PortBuilder {
+public class PortBuilder implements Runnable{
 
 	SerialPort port;
+	Thread t;
+	boolean portFlag = true;
+	HashMap<Integer, Drone> droneMap = new HashMap<Integer, Drone>();
 
 	public SerialPort[] getAvailablePorts() {
 		return SerialPort.getCommPorts();
 	}
 
 	public void buildPort(SerialPort port) {
+		portFlag = true;
 		this.port = port;
 		this.port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0,0); // default parameters used for non-blocking
 		// serial poling
-		this.port.setBaudRate(57600);// default parameters used for data bits, parity and stop bits. To be added.
+		this.port.setBaudRate(115200);// default parameters used for data bits, parity and stop bits. To be added.
 		this.port.openPort();
 		
 		port.addDataListener(new SerialPortDataListener() {
@@ -45,24 +53,25 @@ public class PortBuilder {
 			      
 			      try {
 						MavlinkConnection connection = MavlinkConnection.create(port.getInputStream(), port.getOutputStream());
+						
 						MavlinkMessage message;
-						if ((message = connection.next()) != null) {
-							if (message instanceof Mavlink2Message) {
-								Mavlink2Message message2 = (Mavlink2Message) message;
-								System.out.println("Mavlink 2 message");
-								if (message2.isSigned()) {
-									System.out.println("Signed Mavlink 2 message");
-								} else {
-									// Message unsigned
-									System.out.println("Unsigned Message");
-								}
-							} else {
-								// Mavlink 1 message
+					
+						
+						
+						//MavlinkPacket packet;
+						while ((message = connection.next()) != null && portFlag) {
+							
+							int id = message.getOriginSystemId();
+							if(!droneMap.containsKey(id)) {
+								System.out.println("building new drone");
+								Drone drone = new Drone();
+								drone.buildDrone(id);
+								droneMap.put(id, drone);
 							}
 							
 							System.out.println(message.toString());
-						
-
+							
+							
 						}
 					} catch (Exception ex) {
 						ex.printStackTrace();
@@ -76,9 +85,15 @@ public class PortBuilder {
 	}
 
 	public void closePort() {
-		
+		portFlag = false;
 		this.port.closePort();
 		System.out.println("close port called");
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
