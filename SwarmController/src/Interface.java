@@ -26,7 +26,8 @@ public class Interface implements ActionListener{
 	JComboBox<SerialPort> cb_ports = new JComboBox<SerialPort>();
 	PortBuilder portBuilder = new PortBuilder();
 	static JFrame frame;
-	static JPanel container;
+	JPanel container;
+	static JPanel droneContainer;
 	
 	public void interfaceStart() {
 		frame = new JFrame();
@@ -42,6 +43,7 @@ public class Interface implements ActionListener{
 	
 	public Component entryPoint() {
 		container = new JPanel(new BorderLayout());
+		droneContainer = new JPanel(new FlowLayout());
 		JPanel controlPanel = new JPanel(new FlowLayout());
 		updatePorts();
 		JButton b_openPort = new JButton("Open Port");
@@ -53,12 +55,13 @@ public class Interface implements ActionListener{
 		controlPanel.add(b_openPort);
 		controlPanel.add(b_closePort);
 		container.add(controlPanel, BorderLayout.EAST);
+		container.add(droneContainer, BorderLayout.CENTER);
 		return container;
 	}
 	
 	static void addDrone(Component drone) {
-		container.add(drone, BorderLayout.CENTER);
-		container.revalidate();
+		droneContainer.add(drone, BorderLayout.CENTER);
+		droneContainer.revalidate();
 		
 	}
 	

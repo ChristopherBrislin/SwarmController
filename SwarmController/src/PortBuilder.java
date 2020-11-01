@@ -39,7 +39,7 @@ public class PortBuilder implements Runnable{
 		this.port = port;
 		this.port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0,0); // default parameters used for non-blocking
 		// serial poling
-		this.port.setBaudRate(115200);// default parameters used for data bits, parity and stop bits. To be added.
+		this.port.setBaudRate(57600);// default parameters used for data bits, parity and stop bits. To be added.
 		this.port.openPort();
 		
 		port.addDataListener(new SerialPortDataListener() {
@@ -69,7 +69,7 @@ public class PortBuilder implements Runnable{
 								droneMap.put(id, drone);
 							}
 							
-							System.out.println(message.toString());
+							System.out.println(message.getOriginSystemId());
 							
 							
 						}

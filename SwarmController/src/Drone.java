@@ -23,6 +23,10 @@ public class Drone implements ActionListener{
 		
 	}
 	
+	public int getDroneID() {
+		return droneID;
+	}
+	
 	public void buildInterface() {
 		JPanel container = new JPanel();
 		JButton armButton = new JButton("Arm");
