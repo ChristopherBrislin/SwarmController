@@ -2,6 +2,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -29,6 +30,7 @@ public class PortBuilder implements Runnable{
 	Thread t;
 	boolean portFlag = true;
 	HashMap<Integer, Drone> droneMap = new HashMap<Integer, Drone>();
+	//ArrayList<Drone> droneList = new ArrayList<Drone>();
 
 	public SerialPort[] getAvailablePorts() {
 		return SerialPort.getCommPorts();
@@ -66,6 +68,7 @@ public class PortBuilder implements Runnable{
 								System.out.println("building new drone");
 								Drone drone = new Drone();
 								drone.buildDrone(id);
+								//droneList.add(drone);
 								droneMap.put(id, drone);
 							}
 							
