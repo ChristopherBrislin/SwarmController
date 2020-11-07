@@ -51,8 +51,9 @@ public class PortBuilder {
 		this.port.openPort();
 		
 		port.addDataListener(new SerialPortDataListener() {
-			int last = 0;
-			int dropCount = 0;
+			float last = 0;
+			float dropCount = 0;
+			float totalCount = 0;
 			   @Override
 			   public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_AVAILABLE; }
 			   @Override
@@ -71,10 +72,11 @@ public class PortBuilder {
 						
 						
 						//MavlinkPacket packet;
-						while ((message = connection.next()) != null && portFlag) {
-							if(message.getSequence()!=last++) {
+						while ((message = connection.next()) != null) {
+							if(message.getSequence()!= (last+1)) {
 								dropCount++;
 							}
+							totalCount ++;
 							int id = message.getOriginSystemId();
 							if(!droneMap.containsKey(id)) {
 								System.out.println("building new drone");
@@ -83,13 +85,13 @@ public class PortBuilder {
 								//droneList.add(drone);
 								droneMap.put(id, drone);
 							}
-							//System.out.println(dropCount + "\t" + last + "\t" + message.getPayload());
+							System.out.println((dropCount/totalCount*100) + "% \t" + dropCount + "\t" + message.getPayload());
 							
 							
 							if(message.getPayload() instanceof SysStatus) {
 								MavlinkMessage<SysStatus> status = (MavlinkMessage<SysStatus>) message;
 								//int test = status.hashCode();
-								System.out.println(dropCount+ "\t" + last + "\t" +status.getPayload());
+								//System.out.println(dropCount+ "\t" + last + "\t" +status.getPayload());
 								//System.out.println(status.getPayload());
 							}
 							last = message.getSequence();
