@@ -71,13 +71,14 @@ public class PortBuilder {
 								.build();
 						
 						MavlinkMessage message;
-						
+						StandardDialect dialect = new StandardDialect();
 						
 						while ((message = connection.next()) != null) {
 							if(message.getSequence()!= (last+1)) {
 								dropCount += message.getSequence() - last;
 							}
 							totalCount ++;
+							
 							int id = message.getOriginSystemId();
 							if(!droneMap.containsKey(id)) {
 								System.out.println("building new drone");
