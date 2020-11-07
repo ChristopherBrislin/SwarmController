@@ -46,10 +46,10 @@ public class Drone implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		switch(e.getActionCommand()) {
 		case("Arm"):
-			System.out.println(droneID + "Armed");
+			System.out.println(droneID + " Armed");
 			break;
 		case("Disarm"):
-			System.out.println(droneID + "Disarmed");
+			System.out.println(droneID + " Disarmed");
 			break;
 		}
 		

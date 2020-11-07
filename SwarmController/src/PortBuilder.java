@@ -4,16 +4,22 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
 
+import io.dronefleet.mavlink.AbstractMavlinkDialect;
 import io.dronefleet.mavlink.Mavlink2Message;
 import io.dronefleet.mavlink.MavlinkConnection;
+import io.dronefleet.mavlink.MavlinkDialect;
 import io.dronefleet.mavlink.MavlinkMessage;
+import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
 import io.dronefleet.mavlink.common.Heartbeat;
 import io.dronefleet.mavlink.common.Statustext;
+import io.dronefleet.mavlink.common.StatustextLong;
+import io.dronefleet.mavlink.common.SysStatus;
 import io.dronefleet.mavlink.protocol.MavlinkPacket;
 import io.dronefleet.mavlink.protocol.MavlinkPacketReader;
 
@@ -24,7 +30,7 @@ import io.dronefleet.mavlink.protocol.MavlinkPacketReader;
 /**
  * Christopher Brislin 1 Nov 2020 SwarmController
  */
-public class PortBuilder implements Runnable{
+public class PortBuilder {
 
 	SerialPort port;
 	Thread t;
@@ -36,15 +42,17 @@ public class PortBuilder implements Runnable{
 		return SerialPort.getCommPorts();
 	}
 
-	public void buildPort(SerialPort port) {
+	public void buildPort (SerialPort port) {
 		portFlag = true;
 		this.port = port;
 		this.port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0,0); // default parameters used for non-blocking
 		// serial poling
-		this.port.setBaudRate(57600);// default parameters used for data bits, parity and stop bits. To be added.
+		this.port.setBaudRate(115200);// default parameters used for data bits, parity and stop bits. To be added.
 		this.port.openPort();
 		
 		port.addDataListener(new SerialPortDataListener() {
+			int last = 0;
+			int dropCount = 0;
 			   @Override
 			   public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_AVAILABLE; }
 			   @Override
@@ -57,12 +65,16 @@ public class PortBuilder implements Runnable{
 						MavlinkConnection connection = MavlinkConnection.create(port.getInputStream(), port.getOutputStream());
 						
 						MavlinkMessage message;
+						
+						
 					
 						
 						
 						//MavlinkPacket packet;
 						while ((message = connection.next()) != null && portFlag) {
-							
+							if(message.getSequence()!=last++) {
+								dropCount++;
+							}
 							int id = message.getOriginSystemId();
 							if(!droneMap.containsKey(id)) {
 								System.out.println("building new drone");
@@ -71,10 +83,16 @@ public class PortBuilder implements Runnable{
 								//droneList.add(drone);
 								droneMap.put(id, drone);
 							}
+							//System.out.println(dropCount + "\t" + last + "\t" + message.getPayload());
 							
-							System.out.println(message.getOriginSystemId());
 							
-							
+							if(message.getPayload() instanceof SysStatus) {
+								MavlinkMessage<SysStatus> status = (MavlinkMessage<SysStatus>) message;
+								//int test = status.hashCode();
+								System.out.println(dropCount+ "\t" + last + "\t" +status.getPayload());
+								//System.out.println(status.getPayload());
+							}
+							last = message.getSequence();
 						}
 					} catch (Exception ex) {
 						ex.printStackTrace();
@@ -93,10 +111,6 @@ public class PortBuilder implements Runnable{
 		System.out.println("close port called");
 	}
 
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		
-	}
+
 
 }
