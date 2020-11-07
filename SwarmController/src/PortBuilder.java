@@ -17,11 +17,13 @@ import io.dronefleet.mavlink.MavlinkDialect;
 import io.dronefleet.mavlink.MavlinkMessage;
 import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
 import io.dronefleet.mavlink.common.Heartbeat;
+import io.dronefleet.mavlink.common.MavAutopilot;
 import io.dronefleet.mavlink.common.Statustext;
 import io.dronefleet.mavlink.common.StatustextLong;
 import io.dronefleet.mavlink.common.SysStatus;
 import io.dronefleet.mavlink.protocol.MavlinkPacket;
 import io.dronefleet.mavlink.protocol.MavlinkPacketReader;
+import io.dronefleet.mavlink.standard.StandardDialect;
 
 /**
  * 
@@ -63,18 +65,17 @@ public class PortBuilder {
 			         return;
 			      
 			      try {
-						MavlinkConnection connection = MavlinkConnection.create(port.getInputStream(), port.getOutputStream());
+			    	  	
+						MavlinkConnection connection = MavlinkConnection.builder(port.getInputStream(), port.getOutputStream())
+								.dialect(MavAutopilot.MAV_AUTOPILOT_GENERIC, new StandardDialect())
+								.build();
 						
 						MavlinkMessage message;
 						
 						
-					
-						
-						
-						//MavlinkPacket packet;
 						while ((message = connection.next()) != null) {
 							if(message.getSequence()!= (last+1)) {
-								dropCount++;
+								dropCount += message.getSequence() - last;
 							}
 							totalCount ++;
 							int id = message.getOriginSystemId();
@@ -88,8 +89,10 @@ public class PortBuilder {
 							System.out.println((dropCount/totalCount*100) + "% \t" + dropCount + "\t" + message.getPayload());
 							
 							
-							if(message.getPayload() instanceof SysStatus) {
-								MavlinkMessage<SysStatus> status = (MavlinkMessage<SysStatus>) message;
+							if(message.getPayload() instanceof Heartbeat) {
+								MavlinkMessage<Heartbeat> heartbeat = (MavlinkMessage<Heartbeat>) message;
+								heartbeat.getOriginSystemId();
+								
 								//int test = status.hashCode();
 								//System.out.println(dropCount+ "\t" + last + "\t" +status.getPayload());
 								//System.out.println(status.getPayload());
