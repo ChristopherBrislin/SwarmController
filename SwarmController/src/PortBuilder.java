@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
@@ -21,8 +23,12 @@ import io.dronefleet.mavlink.annotations.MavlinkFieldInfo;
 import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
 import io.dronefleet.mavlink.ardupilotmega.ArdupilotmegaDialect;
 import io.dronefleet.mavlink.common.BatteryStatus;
+import io.dronefleet.mavlink.common.CommandLong;
 import io.dronefleet.mavlink.common.Heartbeat;
 import io.dronefleet.mavlink.common.MavAutopilot;
+import io.dronefleet.mavlink.common.MavCmd;
+import io.dronefleet.mavlink.common.MavState;
+import io.dronefleet.mavlink.common.MavType;
 import io.dronefleet.mavlink.common.Statustext;
 import io.dronefleet.mavlink.common.StatustextLong;
 import io.dronefleet.mavlink.common.SysStatus;
@@ -38,16 +44,70 @@ import io.dronefleet.mavlink.standard.StandardDialect;
 /**
  * Christopher Brislin 1 Nov 2020 SwarmController
  */
-public class PortBuilder {
+public class PortBuilder{
 
 	SerialPort port;
 	Thread t;
 	boolean portFlag = true;
 	HashMap<Integer, Drone> droneMap = new HashMap<Integer, Drone>();
-	//ArrayList<Drone> droneList = new ArrayList<Drone>();
+	static MavlinkConnection connection;
+	MessageHandler msgHandler = new MessageHandler();
 
 	public SerialPort[] getAvailablePorts() {
 		return SerialPort.getCommPorts();
+	}
+	
+	public void configInboundMessages(int target) {
+		CommandLong intervalMessage = CommandLong.builder()
+				.command(MavCmd.MAV_CMD_SET_MESSAGE_INTERVAL)
+				.confirmation(0)
+				.param1(24)
+				.param2(1000000)
+				.param7(0)
+				.targetSystem(target)
+				.targetComponent(0)
+				.build();
+		
+		try {
+			connection.send1(target, 0, intervalMessage);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		CommandLong intervalMessage2 = CommandLong.builder()
+				.command(MavCmd.MAV_CMD_SET_MESSAGE_INTERVAL)
+				.confirmation(0)
+				.param1(26)
+				.param2(1000000)
+				.param7(0)
+				.targetSystem(target)
+				.targetComponent(0)
+				.build();
+		
+		try {
+			connection.send1(target, 0, intervalMessage2);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		CommandLong intervalMessage3 = CommandLong.builder()
+				.command(MavCmd.MAV_CMD_SET_MESSAGE_INTERVAL)
+				.confirmation(0)
+				.param1(27)
+				.param2(-1)
+				.param7(0)
+				.targetSystem(target)
+				.targetComponent(0)
+				.build();
+		
+		try {
+			connection.send1(target, 0, intervalMessage3);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	public void buildPort (SerialPort port) {
@@ -55,7 +115,7 @@ public class PortBuilder {
 		this.port = port;
 		this.port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0,0); // default parameters used for non-blocking
 		// serial poling
-		this.port.setBaudRate(115200);// default parameters used for data bits, parity and stop bits. To be added.
+		this.port.setBaudRate(57600);// default parameters used for data bits, parity and stop bits. To be added.
 		this.port.openPort();
 		
 		port.addDataListener(new SerialPortDataListener() {
@@ -65,6 +125,7 @@ public class PortBuilder {
 			   @Override
 			   public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_AVAILABLE; }
 			   @Override
+			   
 			   public void serialEvent(SerialPortEvent event)
 			   {
 			      if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
@@ -72,12 +133,14 @@ public class PortBuilder {
 			      
 			      try {
 			    	  	
-						MavlinkConnection connection = MavlinkConnection.builder(port.getInputStream(), port.getOutputStream())
+						connection = MavlinkConnection.builder(port.getInputStream(), port.getOutputStream())
 								.dialect(MavAutopilot.MAV_AUTOPILOT_ARDUPILOTMEGA, new ArdupilotmegaDialect())
 								.build();
 						
 						MavlinkMessage message;
-						MavlinkPacket packet; 
+						Timer time = new Timer();
+						HeartBeatScheduler gcsHeartbeat = new HeartBeatScheduler();
+						time.schedule(gcsHeartbeat, 0, 1000);
 						
 						
 						while ((message = connection.next()) != null) {
@@ -92,37 +155,20 @@ public class PortBuilder {
 								System.out.println("building new drone");
 								Drone drone = new Drone();
 								drone.buildDrone(id);
-								//droneList.add(drone);
 								droneMap.put(id, drone);
+								configInboundMessages(id);
+								
 							}
 							
+							msgHandler.inboundMessage(message);
 							
-							
-							
-							
-							
-							//int msgID = ((MavlinkMessageInfo)message.getPayload().getClass().getAnnotation(MavlinkMessageInfo.class)).id();
-							//System.out.println(dropCount + "% \t" + last + "\t" + msgID +"\t" + message.getPayload());
-							if(message.getPayload() instanceof Statustext) {
-								MavlinkMessage<Statustext> status = (MavlinkMessage<Statustext>) message;
-								final Object message2 = status.getPayload();
 								
-								Arrays.stream(message2.getClass().getDeclaredMethods())
-								.filter(f -> f.isAnnotationPresent(MavlinkFieldInfo.class))
-								.forEach(f -> {
-									try {
-										System.out.printf("%s = %s\n", f.getName(), f.invoke(message2).toString());
-									} catch(InvocationTargetException | IllegalAccessException e) {
-										e.printStackTrace();
-									}
-									
-								});
-							
+								
 							}
 							last = message.getSequence();
 							if(last == 255) last = -1; //Sequence wraparround 
 							
-						}
+						
 					} catch (Exception ex) {
 						ex.printStackTrace();
 					}
