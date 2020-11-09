@@ -53,7 +53,7 @@ public class PortBuilder {
 	static MavlinkConnection connection;
 	MessageHandler msgHandler = new MessageHandler();
 	
-	int[] mavlinkMessages = new int[] {1,165, 147, 193 };
+	int[] mavlinkMessages = new int[] {1,165, 193 };
 	CommandLong[] intervalMessage = new CommandLong[mavlinkMessages.length];
 
 	public SerialPort[] getAvailablePorts() {
