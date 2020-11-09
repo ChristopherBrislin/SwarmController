@@ -1,6 +1,8 @@
+import java.util.ArrayList;
 import java.util.TimerTask;
 
 import io.dronefleet.mavlink.MavlinkMessage;
+import io.dronefleet.mavlink.common.CommandAck;
 import io.dronefleet.mavlink.common.CommandLong;
 import io.dronefleet.mavlink.common.Heartbeat;
 import io.dronefleet.mavlink.common.MavAutopilot;
@@ -25,13 +27,18 @@ public class MessageHandler {
 	
 	public void inboundMessage(MavlinkMessage message) {
 		this.message = message;
+		this.id = message.getOriginSystemId();
 		handleMessage();
 		
 	}
 	
 	public void handleMessage() {
-		System.out.println("MAV" +message.getOriginSystemId() + " says: \t" + message.getPayload());
+		PortBuilder.droneMap.get(id).newMessage(message);
+		
 	}
+	
+	
+	
 	
 
 
