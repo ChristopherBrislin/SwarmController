@@ -24,6 +24,7 @@ import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
 import io.dronefleet.mavlink.ardupilotmega.ArdupilotmegaDialect;
 import io.dronefleet.mavlink.common.BatteryStatus;
 import io.dronefleet.mavlink.common.CommandLong;
+import io.dronefleet.mavlink.common.CommonDialect;
 import io.dronefleet.mavlink.common.Heartbeat;
 import io.dronefleet.mavlink.common.MavAutopilot;
 import io.dronefleet.mavlink.common.MavCmd;
@@ -110,9 +111,12 @@ public class PortBuilder {
 				try {
 
 					connection = MavlinkConnection.builder(port.getInputStream(), port.getOutputStream())
-							.dialect(MavAutopilot.MAV_AUTOPILOT_ARDUPILOTMEGA, new ArdupilotmegaDialect()).build();
+							.dialect(MavAutopilot.MAV_AUTOPILOT_ARDUPILOTMEGA, new ArdupilotmegaDialect())
+							.dialect(MavAutopilot.MAV_AUTOPILOT_GENERIC, new CommonDialect())
+							.build();
 
 					MavlinkMessage message;
+					
 					Timer time = new Timer();
 					HeartBeatScheduler gcsHeartbeat = new HeartBeatScheduler();
 					time.schedule(gcsHeartbeat, 0, 1000);

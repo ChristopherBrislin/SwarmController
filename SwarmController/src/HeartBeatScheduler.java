@@ -28,7 +28,7 @@ public class HeartBeatScheduler  extends TimerTask {
 		
 		try {
 			PortBuilder.connection.send1(255, 0, heartbeat);
-			System.out.println("GCS says: \t" + heartbeat.toString());
+			//System.out.println("GCS says: \t" + heartbeat.toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

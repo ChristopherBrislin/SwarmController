@@ -11,7 +11,15 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import io.dronefleet.mavlink.MavlinkMessage;
+import io.dronefleet.mavlink.annotations.MavlinkEnum;
 import io.dronefleet.mavlink.annotations.MavlinkFieldInfo;
+import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
+import io.dronefleet.mavlink.common.Heartbeat;
+import io.dronefleet.mavlink.common.MavSysStatusSensor;
+import io.dronefleet.mavlink.common.SysStatus;
+import io.dronefleet.mavlink.serialization.payload.reflection.ReflectionPayloadDeserializer;
+import io.dronefleet.mavlink.util.EnumValue;
+import io.dronefleet.mavlink.util.reflection.MavlinkReflection;
 
 /**
  * 
@@ -31,6 +39,7 @@ public class Drone implements ActionListener {
 	
 	MavlinkMessage droneMessage;
 	HashMap<String, String> messageMap = new HashMap<String, String>();
+	String[] messageItems = new String[] {};
 	
 	JPanel container = new JPanel();
 	
@@ -94,7 +103,25 @@ public class Drone implements ActionListener {
 		this.droneMessage = message;
 		calculatePacketDrop(message.getSequence());
 		
+		if(message.getPayload() instanceof SysStatus) {
+			SysStatus stat = (SysStatus) message.getPayload();
+			
+			EnumValue<MavSysStatusSensor> enVal = stat.onboardControlSensorsEnabled();
+			
+			
+			stat.onboardControlSensorsEnabled().flagsEnabled(MavSysStatusSensor.values());
+			
+			System.out.println(enVal.value());
+			
+		}
 		
+		if(message.getPayload() instanceof Heartbeat) {
+			Heartbeat hb = (Heartbeat)message.getPayload();
+			//hb.baseMode().entry()
+			
+			System.out.println("hb: " + hb.systemStatus().entry());
+			
+		}
 		Arrays.stream(message.getPayload().getClass().getDeclaredMethods())
 				.filter(f -> f.isAnnotationPresent(MavlinkFieldInfo.class)).forEach(f -> {
 
@@ -107,7 +134,7 @@ public class Drone implements ActionListener {
 						}
 						
 
-						System.out.println(f.getName() + ": " + messageMap.get(f.getName()));
+						//System.out.println(f.getName() + ": " + messageMap.get(f.getName()));
 
 					} catch (IllegalAccessException e) {
 						// TODO Auto-generated catch block
