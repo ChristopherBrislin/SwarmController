@@ -1,4 +1,6 @@
+import java.awt.CardLayout;
 import java.awt.Container;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
@@ -14,7 +16,12 @@ import io.dronefleet.mavlink.MavlinkMessage;
 import io.dronefleet.mavlink.annotations.MavlinkEnum;
 import io.dronefleet.mavlink.annotations.MavlinkFieldInfo;
 import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
+import io.dronefleet.mavlink.ardupilotmega.EkfStatusReport;
+import io.dronefleet.mavlink.ardupilotmega.Hwstatus;
+import io.dronefleet.mavlink.common.CommandAck;
+import io.dronefleet.mavlink.common.CommandLong;
 import io.dronefleet.mavlink.common.Heartbeat;
+import io.dronefleet.mavlink.common.MavCmd;
 import io.dronefleet.mavlink.common.MavSysStatusSensor;
 import io.dronefleet.mavlink.common.SysStatus;
 import io.dronefleet.mavlink.serialization.payload.reflection.ReflectionPayloadDeserializer;
@@ -36,13 +43,19 @@ public class Drone implements ActionListener {
 	// Packet drop calculations
 	int dropCount;
 	int lastCount = -1;
+	JButton armDisarmButton;
 	
 	MavlinkMessage droneMessage;
 	HashMap<String, String> messageMap = new HashMap<String, String>();
 	String[] messageItems = new String[] {};
 	
-	JPanel container = new JPanel();
+	GridLayout buttonLayout = new GridLayout(0,2);
 	
+	JPanel container = new JPanel(buttonLayout);
+	JPanel cards = new JPanel(new CardLayout());
+	JPanel status = new JPanel();
+	
+	JLabel statusLabel;
 
 	public void buildDrone(int id) {
 		this.droneID = id;
@@ -56,18 +69,39 @@ public class Drone implements ActionListener {
 
 	public void buildInterface() {
 		
-		JButton armButton = new JButton("Arm");
-		JButton disarmButton = new JButton("Disarm");
-
-		armButton.addActionListener(this);
-		disarmButton.addActionListener(this);
-
-		container.add(armButton);
-		container.add(disarmButton);
+		buttonLayout.setHgap(0);
+		buttonLayout.setVgap(0);
 		
+		armDisarmButton = new JButton("Arm");
+		JButton RTLButton = new JButton("RTL");
+		JButton landButton = new JButton("Land");
+		JButton takeoffButton = new JButton("Takeoff");
+		JButton droneData = new JButton("Data");
+		JButton controls = new JButton("Controls");
+		
+		statusLabel = new JLabel("");
 
-		Interface.addDrone(container);
+		armDisarmButton.addActionListener(this);
+		RTLButton.addActionListener(this);
+		droneData.addActionListener(this);
+		controls.addActionListener(this);
+
+		container.add(armDisarmButton);
+		container.add(RTLButton);
+		container.add(landButton);
+		container.add(takeoffButton);
+		container.add(droneData);
+		
+		status.add(statusLabel);
+		status.add(controls);
+		
+		cards.add(container, "Controls");
+		cards.add(status, "Status");
+
+		Interface.addDrone(cards);
 		System.out.println("Drone " + droneID + " built");
+		
+		
 	}
 	
 	public void addItem(JPanel item) {
@@ -99,29 +133,43 @@ public class Drone implements ActionListener {
 			lastCount = -1; // Sequence wraparound
 	}
 
-	public void newMessage(MavlinkMessage message) {
+	public void newMessage(MavlinkMessage<?> message) {
 		this.droneMessage = message;
 		calculatePacketDrop(message.getSequence());
 		
-		if(message.getPayload() instanceof SysStatus) {
-			SysStatus stat = (SysStatus) message.getPayload();
-			
-			EnumValue<MavSysStatusSensor> enVal = stat.onboardControlSensorsEnabled();
-			
-			
-			stat.onboardControlSensorsEnabled().flagsEnabled(MavSysStatusSensor.values());
-			
-			System.out.println(enVal.value());
-			
-		}
 		
 		if(message.getPayload() instanceof Heartbeat) {
 			Heartbeat hb = (Heartbeat)message.getPayload();
-			//hb.baseMode().entry()
+			statusLabel.setText(hb.systemStatus().entry().toString());
 			
-			System.out.println("hb: " + hb.systemStatus().entry());
 			
 		}
+		
+		if(message.getPayload() instanceof SysStatus) {
+			SysStatus ss = (SysStatus) message.getPayload();
+			
+		}
+		
+		if(message.getPayload() instanceof Hwstatus) {
+			Hwstatus hs = (Hwstatus) message.getPayload();
+			
+		}
+		
+		if(message.getPayload() instanceof EkfStatusReport) {
+			EkfStatusReport sr = (EkfStatusReport) message.getPayload();
+			
+		}
+		if(message.getPayload() instanceof CommandAck) {
+			
+		}
+		
+		
+		else {
+			
+		}
+		
+		
+		/*
 		Arrays.stream(message.getPayload().getClass().getDeclaredMethods())
 				.filter(f -> f.isAnnotationPresent(MavlinkFieldInfo.class)).forEach(f -> {
 
@@ -148,18 +196,41 @@ public class Drone implements ActionListener {
 					}
 
 				});
+				*/
 		
 		
+	}
+	
+	public void armDrone(int target) {
+		CommandLong longMessage = CommandLong.builder()
+				.command(MavCmd.MAV_CMD_COMPONENT_ARM_DISARM)
+				.confirmation(0)
+				.param1(1)
+				.param2(21196)
+				.targetSystem(target)
+				.targetComponent(0)
+				.build();
+		
+		PortBuilder.sendMessage(longMessage, target);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		CardLayout c1 = (CardLayout)(cards.getLayout());
+		
 		switch (e.getActionCommand()) {
 		case ("Arm"):
-			System.out.println(droneID + " Armed");
+			armDrone(droneID);
+			armDisarmButton.setText("Disarm");
 			break;
 		case ("Disarm"):
-			System.out.println(droneID + " Disarmed");
+			armDisarmButton.setText("Arm");
+			break;
+		case("Data"):
+			c1.show(cards, "Status");
+			break;
+		case("Controls"):
+			c1.show(cards, "Controls");
 			break;
 		}
 

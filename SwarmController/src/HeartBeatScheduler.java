@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.util.TimerTask;
 
 import io.dronefleet.mavlink.common.Heartbeat;
@@ -26,13 +25,8 @@ public class HeartBeatScheduler  extends TimerTask {
 				.mavlinkVersion(3)
 				.build();
 		
-		try {
-			PortBuilder.connection.send1(255, 0, heartbeat);
-			//System.out.println("GCS says: \t" + heartbeat.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		PortBuilder.sendMessage(heartbeat, 255);
+		System.out.println("Heartbeat Sent");
 		
 	}
 

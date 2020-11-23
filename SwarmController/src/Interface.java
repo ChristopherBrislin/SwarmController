@@ -1,6 +1,7 @@
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -43,7 +44,7 @@ public class Interface implements ActionListener{
 	
 	public Component entryPoint() {
 		container = new JPanel(new BorderLayout());
-		droneContainer = new JPanel(new FlowLayout());
+		droneContainer = new JPanel(new GridLayout(3,0));
 		JPanel controlPanel = new JPanel(new FlowLayout());
 		updatePorts();
 		JButton b_openPort = new JButton("Open Port");
