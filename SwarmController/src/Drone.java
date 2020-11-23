@@ -1,4 +1,5 @@
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -7,10 +8,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
 
 import io.dronefleet.mavlink.MavlinkMessage;
 import io.dronefleet.mavlink.annotations.MavlinkEnum;
@@ -56,6 +59,9 @@ public class Drone implements ActionListener {
 	JPanel status = new JPanel();
 	
 	JLabel statusLabel;
+	JLabel packetDrop;
+	
+	Border border = BorderFactory.createLineBorder(Color.black, 1, false);
 
 	public void buildDrone(int id) {
 		this.droneID = id;
@@ -80,11 +86,14 @@ public class Drone implements ActionListener {
 		JButton controls = new JButton("Controls");
 		
 		statusLabel = new JLabel("");
+		packetDrop = new JLabel("");
 
 		armDisarmButton.addActionListener(this);
 		RTLButton.addActionListener(this);
 		droneData.addActionListener(this);
 		controls.addActionListener(this);
+		
+		container.setBorder(border);
 
 		container.add(armDisarmButton);
 		container.add(RTLButton);
@@ -93,7 +102,9 @@ public class Drone implements ActionListener {
 		container.add(droneData);
 		
 		status.add(statusLabel);
+		status.add(packetDrop);
 		status.add(controls);
+		status.setBorder(border);
 		
 		cards.add(container, "Controls");
 		cards.add(status, "Status");
@@ -132,10 +143,16 @@ public class Drone implements ActionListener {
 		if (lastCount == 255)
 			lastCount = -1; // Sequence wraparound
 	}
+	
+	public void updateLabels() {
+		packetDrop.setText(Integer.toString(dropCount));
+	}
 
 	public void newMessage(MavlinkMessage<?> message) {
 		this.droneMessage = message;
 		calculatePacketDrop(message.getSequence());
+		updateLabels();
+		
 		
 		
 		if(message.getPayload() instanceof Heartbeat) {

@@ -5,11 +5,13 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
 
 import com.fazecast.jSerialComm.SerialPort;
 
@@ -25,10 +27,12 @@ import com.fazecast.jSerialComm.SerialPort;
 public class Interface implements ActionListener{
 	
 	JComboBox<SerialPort> cb_ports = new JComboBox<SerialPort>();
-	PortBuilder portBuilder = new PortBuilder();
+	PortBuilder portBuilder;
 	static JFrame frame;
 	JPanel container;
 	static JPanel droneContainer;
+	static boolean closePort = false;
+	Border border = BorderFactory.createLoweredBevelBorder();
 	
 	public void interfaceStart() {
 		frame = new JFrame();
@@ -45,6 +49,8 @@ public class Interface implements ActionListener{
 	public Component entryPoint() {
 		container = new JPanel(new BorderLayout());
 		droneContainer = new JPanel(new GridLayout(3,0));
+		droneContainer.setBorder(border);
+		
 		JPanel controlPanel = new JPanel(new FlowLayout());
 		updatePorts();
 		JButton b_openPort = new JButton("Open Port");
@@ -55,7 +61,7 @@ public class Interface implements ActionListener{
 		controlPanel.add(cb_ports);
 		controlPanel.add(b_openPort);
 		controlPanel.add(b_closePort);
-		container.add(controlPanel, BorderLayout.EAST);
+		container.add(controlPanel, BorderLayout.SOUTH);
 		container.add(droneContainer, BorderLayout.CENTER);
 		return container;
 	}
@@ -67,18 +73,19 @@ public class Interface implements ActionListener{
 	}
 	
 	public void updatePorts() {
-		cb_ports.setModel(new DefaultComboBoxModel<SerialPort>(portBuilder.getAvailablePorts()));
+		cb_ports.setModel(new DefaultComboBoxModel<SerialPort>(SerialPort.getCommPorts()));
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		switch(e.getActionCommand()) {
 		case("Open Port"):
-			portBuilder.buildPort((SerialPort)cb_ports.getSelectedItem());
+			portBuilder = new PortBuilder((SerialPort)cb_ports.getSelectedItem());
+			portBuilder.start();
 			break;
 		case("Close Port"):
-			System.out.println("trying to close port");
-			portBuilder.closePort();
+			closePort = true;
+			
 			break;
 		
 		default:
