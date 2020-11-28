@@ -45,7 +45,9 @@ public class MessageHandler {
 		}
 		
 		if (PortBuilder.droneMap.containsKey(id)) {
+			//If the drone exists in the hashmap, just send the message through to the existing drone. 
 			PortBuilder.droneMap.get(id).newMessage(message);
+			
 		} else if (message.getPayload() instanceof Heartbeat && !PortBuilder.droneMap.containsKey(id)) {
 
 			// If message is a heartbeat cast it 
@@ -72,7 +74,7 @@ public class MessageHandler {
 		
 			currentIntervalMessage.getPayload().messageId();
 		
-			if(currentIntervalMessage.getPayload().intervalUs() < 1000000 || currentIntervalMessage.getPayload().intervalUs() > 1000000) {
+			if(currentIntervalMessage.getPayload().intervalUs() != 1000000) {
 			CommandLong longMessage = CommandLong.builder()
 					.command(MavCmd.MAV_CMD_SET_MESSAGE_INTERVAL)
 					.confirmation(0)
@@ -83,7 +85,7 @@ public class MessageHandler {
 					.targetComponent(0)
 					.build();
 			
-			PortBuilder.sendMessage(longMessage, target);
+			PortBuilder.sendMessage(longMessage, 255);
 			System.out.println("Config Sent");
 			}
 			if(i<3) {
@@ -91,6 +93,7 @@ public class MessageHandler {
 				i++;
 			
 			}else if(i>2) {
+				//!! THIS ISN'T GOING TO WORK WITH MULTIPLE SYSTEMS - FIX IT. Suggest moving it to the drone. 
 				ConfigComplete = true;
 			}
 		
@@ -111,7 +114,7 @@ public class MessageHandler {
 				.targetComponent(0)
 				.build();
 		
-		PortBuilder.sendMessage(longMessage, target);
+		PortBuilder.sendMessage(longMessage, 255);
 		System.out.println("Config Requested");
 	
 		
