@@ -1,16 +1,5 @@
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.HashMap;
-
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.border.Border;
+import java.util.EnumSet;
+import java.util.stream.Stream;
 
 import io.dronefleet.mavlink.MavlinkMessage;
 import io.dronefleet.mavlink.ardupilotmega.EkfStatusReport;
@@ -19,6 +8,7 @@ import io.dronefleet.mavlink.common.CommandAck;
 import io.dronefleet.mavlink.common.CommandLong;
 import io.dronefleet.mavlink.common.Heartbeat;
 import io.dronefleet.mavlink.common.MavCmd;
+import io.dronefleet.mavlink.common.MavSysStatusSensor;
 import io.dronefleet.mavlink.common.SysStatus;
 
 /**
@@ -41,7 +31,8 @@ public class Drone {
 	MavlinkMessage<?> droneMessage;
 	DroneInterface droneInterface;
 	
-	Border border = BorderFactory.createLineBorder(Color.black, 1, false);
+	boolean isArmed = false;
+	
 
 	public void buildDrone(int id) {
 		this.droneID = id;
@@ -55,12 +46,6 @@ public class Drone {
 		return droneID;
 	}
 
-	
-	
-	
-
-	
-
 	public void calculatePacketDrop(int sequence) {
 		if (sequence != (lastCount + 1)) {
 			dropCount++;
@@ -70,8 +55,101 @@ public class Drone {
 			lastCount = -1; // Sequence wraparound
 	}
 	
+	public void baseModeFlags(Heartbeat hbmsg){
+		int input = hbmsg.baseMode().value();
+		
+		for(int k = 1; k <= 8; k++ ) {
+			switch(input & (1 << k)) {
+			case(1):
+				//Custom mode enabled
+				break;
+			case(2):
+				//Test mode enabled
+				break;
+			case(4):
+				//Autonomous mode enabled
+				break;
+			case(8):
+				//Guided enabled - this includes auto mission waypoints
+				break;
+			case(16):
+				//Stabilized enabled
+				break;
+			case(32):
+				//HIL enabled - simulation
+				break;
+			case(64):
+				//Manual input enabled
+				break;
+			case(128):
+				//System.out.println("ARMED!!");
+				if(!isArmed)
+					isArmed = true;
+				
+				//Armed state
+				break;
+			}
+		}
+		
+		for(int k = 1; k <= 8; k++ ) {
+			switch(~input & (1 << k)) {
+			case(1):
+				//Custom mode enabled
+				break;
+			case(2):
+				//Test mode enabled
+				break;
+			case(4):
+				//Autonomous mode enabled
+				break;
+			case(8):
+				//Guided enabled - this includes auto mission waypoints
+				break;
+			case(16):
+				//Stabilized enabled
+				break;
+			case(32):
+				//HIL enabled - simulation
+				break;
+			case(64):
+				//Manual input enabled
+				break;
+			case(128):
+				//System.out.println("ARMED!!");
+				if(isArmed)
+					isArmed = false;
+				
+				//Armed state
+				break;
+			}
+		}
+		
+		
+	}
 	
-
+	public void sysStatusFlags(SysStatus sysmsg) {
+		
+		//Compares the bitmask with all enumerated sensors. 
+		EnumSet.allOf(MavSysStatusSensor.class).forEach(sensor -> {
+			System.out.print(sensor);
+			
+			if(sysmsg.onboardControlSensorsPresent().flagsEnabled(sensor)) {
+				System.out.print(" present ");
+			}
+			
+			if(sysmsg.onboardControlSensorsEnabled().flagsEnabled(sensor)) {
+				System.out.print(" enabled");
+			}
+			
+			if(sysmsg.onboardControlSensorsHealth().flagsEnabled(sensor)) {
+				System.out.print(" healthy ");
+			}
+			
+			System.out.print("\n");
+			
+		});
+	}
+	
 	public void newMessage(MavlinkMessage<?> message) {
 		this.droneMessage = message;
 		calculatePacketDrop(message.getSequence());
@@ -82,6 +160,7 @@ public class Drone {
 			Heartbeat hb = (Heartbeat)message.getPayload();
 			
 			droneInterface.setStatusLabel(hb.systemStatus().entry().toString());
+			baseModeFlags(hb);
 			
 			
 		}
@@ -89,6 +168,8 @@ public class Drone {
 		if(message.getPayload() instanceof SysStatus) {
 			SysStatus ss = (SysStatus) message.getPayload();
 			ss.batteryRemaining();
+			sysStatusFlags(ss);
+			
 			
 		}
 		
@@ -155,8 +236,14 @@ public class Drone {
 				.targetComponent(0)
 				.build();
 		
-		PortBuilder.sendMessage(longMessage, target);
+		PortBuilder.sendMessage(longMessage);
 	}
+	
+	public void disarmDrone() {
+		
+	}
+	
+	
 
 	
 
