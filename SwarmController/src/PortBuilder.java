@@ -6,6 +6,8 @@ import java.util.Timer;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import com.fazecast.jSerialComm.SerialPortIOException;
+
 import io.dronefleet.mavlink.MavlinkConnection;
 import io.dronefleet.mavlink.MavlinkMessage;
 import io.dronefleet.mavlink.ardupilotmega.ArdupilotmegaDialect;
@@ -42,9 +44,9 @@ public class PortBuilder implements Runnable{
 		return SerialPort.getCommPorts();
 	}
 
-	public static void sendMessage(Object outMessage, int target) {
+	public static void sendMessage(Object outMessage) {
 		try {
-			connection.send1(target, 0, outMessage);
+			connection.send1(255, 0, outMessage);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -119,9 +121,10 @@ public class PortBuilder implements Runnable{
 					
 
 				} catch (Exception ex) {
+					time.cancel();
 					ex.printStackTrace();
 					
-				}
+				} 
 			}
 			
 		});

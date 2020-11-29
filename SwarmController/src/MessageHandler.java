@@ -85,7 +85,7 @@ public class MessageHandler {
 					.targetComponent(0)
 					.build();
 			
-			PortBuilder.sendMessage(longMessage, 255);
+			PortBuilder.sendMessage(longMessage);
 			System.out.println("Config Sent");
 			}
 			if(i<3) {
@@ -114,7 +114,7 @@ public class MessageHandler {
 				.targetComponent(0)
 				.build();
 		
-		PortBuilder.sendMessage(longMessage, 255);
+		PortBuilder.sendMessage(longMessage);
 		System.out.println("Config Requested");
 	
 		

@@ -80,6 +80,8 @@ public class Interface implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		switch(e.getActionCommand()) {
 		case("Open Port"):
+			//This needs to be changed - if the port is closed and re-opened, superflous threads are created. 
+			closePort = false;
 			portBuilder = new PortBuilder((SerialPort)cb_ports.getSelectedItem());
 			portBuilder.start();
 			break;
