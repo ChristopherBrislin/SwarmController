@@ -16,7 +16,7 @@ public class MessageHandler {
 	int id;
 	static int i = 0;
 	MavlinkMessage<?> message;
-	static int[] mavlinkMessages = new int[] {1,165, 193}; //SYS_STATUS, HWSTATUS, EKF_STATUS_REPORT
+	static int[] mavlinkMessages = new int[] {1,165, 193, 245}; //SYS_STATUS, HWSTATUS, EKF_STATUS_REPORT, EXTENDED_SYS_STATE
 	
 	
 	long pastTime;
@@ -88,11 +88,11 @@ public class MessageHandler {
 			PortBuilder.sendMessage(longMessage);
 			System.out.println("Config Sent");
 			}
-			if(i<3) {
+			if(i<4) {
 				configInboundMessages(target);
 				i++;
 			
-			}else if(i>2) {
+			}else if(i>3) {
 				//!! THIS ISN'T GOING TO WORK WITH MULTIPLE SYSTEMS - FIX IT. Suggest moving it to the drone. 
 				ConfigComplete = true;
 			}
