@@ -32,6 +32,7 @@ public class Drone {
 	DroneInterface droneInterface;
 	
 	boolean isArmed = false;
+	boolean inFlight = false;
 	
 
 	public void buildDrone(int id) {
@@ -239,7 +240,29 @@ public class Drone {
 		PortBuilder.sendMessage(longMessage);
 	}
 	
-	public void disarmDrone() {
+	public void disarmDrone(int target) {
+		
+		CommandLong longMessage = CommandLong.builder()
+				.command(MavCmd.MAV_CMD_COMPONENT_ARM_DISARM)
+				.confirmation(0)
+				.param1(0)
+				.targetSystem(target)
+				.targetComponent(0)
+				.build();
+		
+		PortBuilder.sendMessage(longMessage);
+		
+	}
+	
+	public void takeoffDrone(int target) {
+		
+	}
+	
+	public void landDrone(int target) {
+		
+	}
+	
+	public void rtlDrone(int target) {
 		
 	}
 	
