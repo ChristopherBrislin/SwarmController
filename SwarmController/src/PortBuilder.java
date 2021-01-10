@@ -36,10 +36,12 @@ public class PortBuilder implements Runnable{
 	
 	Timer time;
 	
-	public PortBuilder(SerialPort port) {
+	public void setPort(SerialPort port) {
 		this.port = port;
 	}
 
+	
+	
 	public SerialPort[] getAvailablePorts() {
 		return SerialPort.getCommPorts();
 	}
@@ -56,8 +58,10 @@ public class PortBuilder implements Runnable{
 	public void closePort() {
 		
 		time.cancel();
+		time.purge();
+		//ßtime.wait();
 		System.out.println("Close requested: " + port.closePort());
-		
+		t=null;
 		
 		
 		
@@ -68,6 +72,8 @@ public class PortBuilder implements Runnable{
 	public void start() {
 		if(t==null) {
 			t = new Thread(this, "Serial Port Thread");
+			t.start();
+		}else {
 			t.start();
 		}
 	}
@@ -94,7 +100,7 @@ public class PortBuilder implements Runnable{
 		time = new Timer();
 		HeartBeatScheduler gcsHeartbeat = new HeartBeatScheduler();
 		time.schedule(gcsHeartbeat, 0, 1000);
-
+		
 		port.addDataListener(new SerialPortDataListener() {
 
 			@Override

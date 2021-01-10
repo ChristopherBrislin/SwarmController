@@ -1,4 +1,4 @@
-import com.fazecast.jSerialComm.SerialPort;
+
 
 /**
  * 
@@ -10,6 +10,9 @@ import com.fazecast.jSerialComm.SerialPort;
  * SwarmController
  */
 public class Main {
+	
+	public static boolean DEBUG = false;
+	public static boolean MAVLINK_DEBUG = false;
 
 	/**
 	 * @param args

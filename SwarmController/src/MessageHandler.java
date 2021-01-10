@@ -32,7 +32,7 @@ public class MessageHandler {
 
 	@SuppressWarnings("unchecked")
 	public void handleMessage() {
-		System.out.println(message.getPayload());
+		if(Main.MAVLINK_DEBUG)System.out.println(message.getPayload());
 		
 		if((System.currentTimeMillis() - pastTime) > TIMEOUT && !ConfigComplete) {
 			configInboundMessages(id);
@@ -86,7 +86,7 @@ public class MessageHandler {
 					.build();
 			
 			PortBuilder.sendMessage(longMessage);
-			System.out.println("Config Sent");
+			if(Main.DEBUG) System.out.println("Config Sent");
 			}
 			if(i<4) {
 				configInboundMessages(target);
@@ -115,7 +115,7 @@ public class MessageHandler {
 				.build();
 		
 		PortBuilder.sendMessage(longMessage);
-		System.out.println("Config Requested");
+		if(Main.DEBUG)System.out.println("Config Requested");
 	
 		
 	}

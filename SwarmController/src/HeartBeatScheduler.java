@@ -26,7 +26,7 @@ public class HeartBeatScheduler  extends TimerTask {
 				.build();
 		
 		PortBuilder.sendMessage(heartbeat);
-		System.out.println("Heartbeat Sent");
+		if(Main.DEBUG)System.out.println("Heartbeat Sent");
 		
 	}
 

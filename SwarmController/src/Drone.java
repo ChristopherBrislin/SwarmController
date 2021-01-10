@@ -1,13 +1,14 @@
 import java.util.EnumSet;
-import java.util.stream.Stream;
-
 import io.dronefleet.mavlink.MavlinkMessage;
 import io.dronefleet.mavlink.ardupilotmega.EkfStatusReport;
 import io.dronefleet.mavlink.ardupilotmega.Hwstatus;
 import io.dronefleet.mavlink.common.CommandAck;
 import io.dronefleet.mavlink.common.CommandLong;
+import io.dronefleet.mavlink.common.ExtendedSysState;
 import io.dronefleet.mavlink.common.Heartbeat;
 import io.dronefleet.mavlink.common.MavCmd;
+import io.dronefleet.mavlink.common.MavLandedState;
+import io.dronefleet.mavlink.common.MavModeFlag;
 import io.dronefleet.mavlink.common.MavSysStatusSensor;
 import io.dronefleet.mavlink.common.SysStatus;
 
@@ -46,6 +47,8 @@ public class Drone {
 	public int getDroneID() {
 		return droneID;
 	}
+	
+	
 
 	public void calculatePacketDrop(int sequence) {
 		if (sequence != (lastCount + 1)) {
@@ -57,96 +60,47 @@ public class Drone {
 	}
 	
 	public void baseModeFlags(Heartbeat hbmsg){
-		int input = hbmsg.baseMode().value();
 		
-		for(int k = 1; k <= 8; k++ ) {
-			switch(input & (1 << k)) {
-			case(1):
-				//Custom mode enabled
-				break;
-			case(2):
-				//Test mode enabled
-				break;
-			case(4):
-				//Autonomous mode enabled
-				break;
-			case(8):
-				//Guided enabled - this includes auto mission waypoints
-				break;
-			case(16):
-				//Stabilized enabled
-				break;
-			case(32):
-				//HIL enabled - simulation
-				break;
-			case(64):
-				//Manual input enabled
-				break;
-			case(128):
-				//System.out.println("ARMED!!");
-				if(!isArmed)
-					isArmed = true;
-				
-				//Armed state
-				break;
+		EnumSet.allOf(MavModeFlag.class).forEach(mode -> {
+			
+			
+			if(hbmsg.baseMode().flagsEnabled(mode)) {
+				//System.out.print(mode);
+				//System.out.print(" Active ");
 			}
-		}
+			
+			
+			
+			//System.out.print("\n");
+			
+		});
 		
-		for(int k = 1; k <= 8; k++ ) {
-			switch(~input & (1 << k)) {
-			case(1):
-				//Custom mode enabled
-				break;
-			case(2):
-				//Test mode enabled
-				break;
-			case(4):
-				//Autonomous mode enabled
-				break;
-			case(8):
-				//Guided enabled - this includes auto mission waypoints
-				break;
-			case(16):
-				//Stabilized enabled
-				break;
-			case(32):
-				//HIL enabled - simulation
-				break;
-			case(64):
-				//Manual input enabled
-				break;
-			case(128):
-				//System.out.println("ARMED!!");
-				if(isArmed)
-					isArmed = false;
-				
-				//Armed state
-				break;
-			}
-		}
+		
 		
 		
 	}
+	
+	
 	
 	public void sysStatusFlags(SysStatus sysmsg) {
 		
 		//Compares the bitmask with all enumerated sensors. 
 		EnumSet.allOf(MavSysStatusSensor.class).forEach(sensor -> {
-			System.out.print(sensor);
+			//System.out.print(sensor);
 			
 			if(sysmsg.onboardControlSensorsPresent().flagsEnabled(sensor)) {
-				System.out.print(" present ");
+				//System.out.print(" present ");
 			}
 			
 			if(sysmsg.onboardControlSensorsEnabled().flagsEnabled(sensor)) {
-				System.out.print(" enabled");
+				//System.out.print(" enabled");
 			}
 			
 			if(sysmsg.onboardControlSensorsHealth().flagsEnabled(sensor)) {
-				System.out.print(" healthy ");
+				//System.out.print(" healthy ");
 			}
 			
-			System.out.print("\n");
+			//System.out.print("\n");
 			
 		});
 	}
@@ -187,6 +141,16 @@ public class Drone {
 		}
 		if(message.getPayload() instanceof CommandAck) {
 			
+		}
+		
+		if(message.getPayload() instanceof ExtendedSysState) {
+			ExtendedSysState ess = (ExtendedSysState) message.getPayload();
+			if(ess.landedState().entry().equals(MavLandedState.MAV_LANDED_STATE_IN_AIR)) {
+				//May need to elaborate here depending on system logic.
+				inFlight = true;
+			}else {
+				inFlight = false;
+			}
 		}
 		
 		

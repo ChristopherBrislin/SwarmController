@@ -1,5 +1,6 @@
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,9 +34,15 @@ public class DroneInterface extends Drone implements ActionListener {
 	JPanel container = new JPanel(buttonLayout);
 	JPanel cards = new JPanel(new CardLayout());
 	JPanel status = new JPanel();
+	JPanel parentContainer = new JPanel();
+	Dimension buttonSize = new Dimension(150,50);
+	
 	
 	JLabel statusLabel;
 	JLabel packetDrop;
+	JPanel indicator = new JPanel();
+	Color indColor = new Color(245, 66, 66);
+	
 	
 	int droneID;
 	
@@ -52,6 +59,7 @@ public class DroneInterface extends Drone implements ActionListener {
 
 		buttonLayout.setHgap(0);
 		buttonLayout.setVgap(0);
+		indicator.setBackground(indColor);
 
 		armDisarmButton = new JButton("Arm");
 		JButton RTLButton = new JButton("RTL");
@@ -59,15 +67,22 @@ public class DroneInterface extends Drone implements ActionListener {
 		takeoffLandButton = new JButton("Takeoff");
 		JButton droneData = new JButton("Data");
 		JButton controls = new JButton("Controls");
+		
 
 		statusLabel = new JLabel("");
 		packetDrop = new JLabel("");
 
 		armDisarmButton.addActionListener(this);
+		armDisarmButton.setPreferredSize(buttonSize);
 		takeoffLandButton.addActionListener(this);
+		takeoffLandButton.setPreferredSize(buttonSize);
 		RTLButton.addActionListener(this);
+		RTLButton.setPreferredSize(buttonSize);
 		droneData.addActionListener(this);
+		droneData.setPreferredSize(buttonSize);
 		controls.addActionListener(this);
+		controls.setPreferredSize(buttonSize);
+		indicator.setPreferredSize(buttonSize);
 
 		container.setBorder(border);
 
@@ -76,16 +91,28 @@ public class DroneInterface extends Drone implements ActionListener {
 		container.add(landButton);
 		container.add(takeoffLandButton);
 		container.add(droneData);
+		container.add(indicator);
 
 		status.add(statusLabel);
 		status.add(packetDrop);
 		status.add(controls);
 		status.setBorder(border);
+		
+		status.setSize(new Dimension(300,300));
+		
+		container.setSize(new Dimension(300,300));
 
 		cards.add(container, "Controls");
 		cards.add(status, "Status");
+		
+		
+		
+		cards.setPreferredSize(new Dimension(200, 75));
+		parentContainer.add(cards);
+		
+		//System.out.println(cards.getSize());
 
-		Interface.addDrone(cards);
+		Interface.addDrone(parentContainer);
 		System.out.println("Drone " + droneID + " built");
 
 	}
@@ -95,6 +122,10 @@ public class DroneInterface extends Drone implements ActionListener {
 		container.revalidate();
 		Interface.addDrone(container);
 
+	}
+	
+	public void setIndicator(Color col) {
+		indicator.setBackground(col);
 	}
 	
 	public void messageInterface() {

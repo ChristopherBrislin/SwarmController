@@ -10,6 +10,6 @@ import java.awt.Dimension;
  * SwarmController
  */
 public class Const {
-	static final Dimension DEFAULT_MIN_SIZE = new Dimension(1000,500);
+	static final Dimension DEFAULT_MIN_SIZE = new Dimension(1007,500);
 
 }
