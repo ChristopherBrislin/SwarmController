@@ -1,4 +1,5 @@
-
+import java.awt.Dimension;
+import java.awt.Toolkit;
 
 /**
  * 
@@ -18,6 +19,9 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		Const.setScreenSize(screenSize);
 		
 		Interface gui = new Interface();
 		gui.interfaceStart();
