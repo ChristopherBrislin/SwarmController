@@ -1,5 +1,6 @@
 import java.util.EnumSet;
 import io.dronefleet.mavlink.MavlinkMessage;
+import io.dronefleet.mavlink.ardupilotmega.EkfStatusFlags;
 import io.dronefleet.mavlink.ardupilotmega.EkfStatusReport;
 import io.dronefleet.mavlink.ardupilotmega.Hwstatus;
 import io.dronefleet.mavlink.common.CommandAck;
@@ -61,17 +62,30 @@ public class Drone {
 	
 	public void baseModeFlags(Heartbeat hbmsg){
 		
+		if(isArmed !=hbmsg.baseMode().flagsEnabled(MavModeFlag.MAV_MODE_FLAG_SAFETY_ARMED)) {
+			isArmed = hbmsg.baseMode().flagsEnabled(MavModeFlag.MAV_MODE_FLAG_SAFETY_ARMED);
+			droneInterface.setArmButtonText(isArmed);
+		}
+		
+		
+		
+		
 		EnumSet.allOf(MavModeFlag.class).forEach(mode -> {
 			
 			
 			if(hbmsg.baseMode().flagsEnabled(mode)) {
-				//System.out.print(mode);
-				//System.out.print(" Active ");
+				if(Main.DEBUG){
+					//System.out.print(mode);
+					//System.out.print(" Active ");
+				}
+				
 			}
 			
 			
 			
-			//System.out.print("\n");
+			if(Main.DEBUG) {
+				//System.out.print("\n");
+			}
 			
 		});
 		
@@ -105,6 +119,18 @@ public class Drone {
 		});
 	}
 	
+	public void ekfStatusFlags(EkfStatusReport ekfmsg) {
+		
+		EnumSet.allOf(EkfStatusFlags.class).forEach(status -> {
+			
+			if(ekfmsg.flags().flagsEnabled(status)) {
+				if(Main.DEBUG)System.out.println(status.toString());
+			}
+			
+		});
+		
+	}
+	
 	public void newMessage(MavlinkMessage<?> message) {
 		this.droneMessage = message;
 		calculatePacketDrop(message.getSequence());
@@ -136,7 +162,7 @@ public class Drone {
 		
 		if(message.getPayload() instanceof EkfStatusReport) {
 			EkfStatusReport sr = (EkfStatusReport) message.getPayload();
-			sr.compassVariance();
+			ekfStatusFlags(sr);
 			
 		}
 		if(message.getPayload() instanceof CommandAck) {
@@ -148,8 +174,10 @@ public class Drone {
 			if(ess.landedState().entry().equals(MavLandedState.MAV_LANDED_STATE_IN_AIR)) {
 				//May need to elaborate here depending on system logic.
 				inFlight = true;
+				droneInterface.setIndicatorLabel("Airborne");
 			}else {
 				inFlight = false;
+				droneInterface.setIndicatorLabel("On Ground");
 			}
 		}
 		

@@ -40,6 +40,7 @@ public class DroneInterface extends Drone implements ActionListener {
 	
 	JLabel statusLabel;
 	JLabel packetDrop;
+	JLabel indicatorLabel;
 	JPanel indicator = new JPanel();
 	Color indColor = new Color(245, 66, 66);
 	
@@ -67,6 +68,7 @@ public class DroneInterface extends Drone implements ActionListener {
 		takeoffLandButton = new JButton("Takeoff");
 		JButton droneData = new JButton("Data");
 		JButton controls = new JButton("Controls");
+		indicatorLabel = new JLabel("");
 		
 
 		statusLabel = new JLabel("");
@@ -83,6 +85,7 @@ public class DroneInterface extends Drone implements ActionListener {
 		controls.addActionListener(this);
 		controls.setPreferredSize(buttonSize);
 		indicator.setPreferredSize(buttonSize);
+		indicator.add(indicatorLabel);
 
 		container.setBorder(border);
 
@@ -128,6 +131,19 @@ public class DroneInterface extends Drone implements ActionListener {
 		indicator.setBackground(col);
 	}
 	
+	public void setIndicatorLabel(String label) {
+		indicatorLabel.setText(label);
+	}
+	
+	public void setArmButtonText(boolean isArmed) {
+		if(isArmed) {
+			armDisarmButton.setText("Disarm");
+		}
+		else if(!isArmed){
+			armDisarmButton.setText("Arm");
+		}
+	}
+	
 	public void messageInterface() {
 		
 	}
@@ -143,14 +159,12 @@ public class DroneInterface extends Drone implements ActionListener {
 		case ("Arm"):
 			if(!isArmed) {
 			armDrone(droneID);
-			armDisarmButton.setText("Disarm");
 			}
 			
 			break;
 		case ("Disarm"):
 			if(isArmed) {
 			disarmDrone(droneID);
-			armDisarmButton.setText("Arm");
 			}
 			break;
 		case("Data"):
