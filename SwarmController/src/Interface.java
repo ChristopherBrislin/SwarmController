@@ -105,6 +105,8 @@ public class Interface implements ActionListener{
 		case("Close Port"):
 			closePort = true;
 			serialPort = null;
+			//Remove all drones
+			
 			
 			break;
 			
