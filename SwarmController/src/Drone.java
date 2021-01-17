@@ -6,6 +6,8 @@ import io.dronefleet.mavlink.ardupilotmega.Hwstatus;
 import io.dronefleet.mavlink.common.CommandAck;
 import io.dronefleet.mavlink.common.CommandLong;
 import io.dronefleet.mavlink.common.ExtendedSysState;
+import io.dronefleet.mavlink.common.GpsFixType;
+import io.dronefleet.mavlink.common.GpsRawInt;
 import io.dronefleet.mavlink.common.Heartbeat;
 import io.dronefleet.mavlink.common.MavCmd;
 import io.dronefleet.mavlink.common.MavLandedState;
@@ -58,6 +60,10 @@ public class Drone {
 		lastCount = sequence;
 		if (lastCount == 255)
 			lastCount = -1; // Sequence wraparound
+	}
+	
+	public void removeInterface() {
+		droneInterface.removeDrone();
 	}
 	
 	public void baseModeFlags(Heartbeat hbmsg){
@@ -131,6 +137,13 @@ public class Drone {
 		
 	}
 	
+	@SuppressWarnings("unlikely-arg-type")
+	public void gpsStatus(GpsRawInt gpsmsg) {
+		if(!gpsmsg.fixType().equals(GpsFixType.GPS_FIX_TYPE_RTK_FLOAT)) {
+			droneInterface.setIndicator(Const.CAUTION);
+		}
+	}
+	
 	public void newMessage(MavlinkMessage<?> message) {
 		this.droneMessage = message;
 		calculatePacketDrop(message.getSequence());
@@ -168,6 +181,11 @@ public class Drone {
 		if(message.getPayload() instanceof CommandAck) {
 			
 		}
+		if(message.getPayload() instanceof GpsRawInt) {
+			GpsRawInt gri = (GpsRawInt) message.getPayload();
+			gpsStatus(gri);
+		}
+		
 		
 		if(message.getPayload() instanceof ExtendedSysState) {
 			ExtendedSysState ess = (ExtendedSysState) message.getPayload();
@@ -187,34 +205,6 @@ public class Drone {
 		}
 		
 		
-		/*
-		Arrays.stream(message.getPayload().getClass().getDeclaredMethods())
-				.filter(f -> f.isAnnotationPresent(MavlinkFieldInfo.class)).forEach(f -> {
-
-					try {
-
-						if (!messageMap.containsKey(f.getName())) {
-							messageMap.put(f.getName(), f.invoke(message.getPayload()).toString());
-						} else if(messageMap.containsKey(f.getName())) {
-							messageMap.replace(f.getName(), f.invoke(message.getPayload()).toString());
-						}
-						
-
-						//System.out.println(f.getName() + ": " + messageMap.get(f.getName()));
-
-					} catch (IllegalAccessException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InvocationTargetException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-
-				});
-				*/
 		
 		
 	}

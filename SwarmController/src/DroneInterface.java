@@ -4,8 +4,6 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
-
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -26,15 +24,20 @@ public class DroneInterface extends Drone implements ActionListener {
 
 	Border border = BorderFactory.createLineBorder(Color.black, 1, false);
 	
-	HashMap<String, String> messageMap = new HashMap<String, String>();
+
 	String[] messageItems = new String[] {};
 	
-	GridLayout buttonLayout = new GridLayout(0,2);
 	
+	//This needs to change to GridBag at some point
+	GridLayout buttonLayout = new GridLayout(0,2);
 	JPanel container = new JPanel(buttonLayout);
+	
+	
 	JPanel cards = new JPanel(new CardLayout());
 	JPanel status = new JPanel();
 	JPanel parentContainer = new JPanel();
+	
+	//To be moved to Const and resized dynamically
 	Dimension buttonSize = new Dimension(150,50);
 	
 	
@@ -110,14 +113,18 @@ public class DroneInterface extends Drone implements ActionListener {
 		
 		
 		
-		cards.setPreferredSize(new Dimension(200, 75));
+		cards.setPreferredSize(new Dimension(Const.CARD_SIZE));
 		parentContainer.add(cards);
 		
 		//System.out.println(cards.getSize());
 
 		Interface.addDrone(parentContainer);
-		System.out.println("Drone " + droneID + " built");
+		if(Main.DEBUG)System.out.println("Drone " + droneID + " built");
 
+	}
+	
+	public void removeDrone() {
+		Interface.removeDrone(parentContainer);
 	}
 
 	public void addItem(JPanel item) {

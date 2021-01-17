@@ -17,6 +17,11 @@ public class Const {
 	//Launch Windo Size
 	static Dimension DEFAULT_MIN_SIZE = new Dimension(1007,500);
 	
+	static int card_width =  (int) ((DEFAULT_MIN_SIZE.width - 7)*0.2);
+	static int card_height = 75;
+	
+	static Dimension CARD_SIZE = new Dimension(card_width, card_height);
+	
 	//Interface Colour Scheme
 	static final Color WARNING = new Color(245, 66, 66);
 	static final Color CAUTION = new Color(252, 177, 3);

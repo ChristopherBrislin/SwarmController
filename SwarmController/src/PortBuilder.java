@@ -1,12 +1,11 @@
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Timer;
+
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
-import com.fazecast.jSerialComm.SerialPortIOException;
 
 import io.dronefleet.mavlink.MavlinkConnection;
 import io.dronefleet.mavlink.MavlinkMessage;
@@ -21,28 +20,39 @@ import io.dronefleet.mavlink.common.MavAutopilot;
 /**
  * Christopher Brislin 1 Nov 2020 SwarmController
  */
-public class PortBuilder implements Runnable{
+public class PortBuilder{
 	
-	Thread t;
-
-	SerialPort port;
-	boolean portFlag = true;
-	static HashMap<Integer, Drone> droneMap = new HashMap<Integer, Drone>();
-	static MavlinkConnection connection;
-	MessageHandler msgHandler = new MessageHandler();
+	
+	
+	
+	
+	
+	
 	
 	InputStream in;
 	OutputStream out;
 	
+	SerialPort port;
+	
+	static MavlinkConnection connection;
+	MessageHandler msgHandler = new MessageHandler();
+	
 	Timer time;
+	
+	
+	//Move these to somewhere more appropriate
+	
 	
 	public void setPort(SerialPort port) {
 		this.port = port;
+		
 	}
 
 	
 	
 	public SerialPort[] getAvailablePorts() {
+		
+		
 		return SerialPort.getCommPorts();
 	}
 
@@ -59,27 +69,26 @@ public class PortBuilder implements Runnable{
 		
 		time.cancel();
 		time.purge();
-		//ßtime.wait();
-		System.out.println("Close requested: " + port.closePort());
-		t=null;
+		port.removeDataListener();
+		port.closePort();
 		
+		
+		
+		if(Main.DEBUG)System.out.println("Close requested: " + port.closePort());
+		
+		msgHandler.onPortClose();
 		
 		
 	
 		
 	}
-	
-	public void start() {
-		if(t==null) {
-			t = new Thread(this, "Serial Port Thread");
-			t.start();
-		}else {
-			t.start();
-		}
+	public boolean portOpen() {
+		return port.isOpen();
 	}
+	
+	
 
-	@Override
-	public void run() {
+	public void openPort() {
 
 		//this.port = port;
 		this.port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);// default parameters used for

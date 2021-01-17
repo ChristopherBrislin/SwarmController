@@ -16,8 +16,9 @@ public class MessageHandler {
 	int id;
 	static int i = 0;
 	MavlinkMessage<?> message;
-	static int[] mavlinkMessages = new int[] {1,165, 193, 245}; //SYS_STATUS, HWSTATUS, EKF_STATUS_REPORT, EXTENDED_SYS_STATE
+	static int[] mavlinkMessages = new int[] {1, 24, 165, 193, 245}; //SYS_STATUS, HWSTATUS, EKF_STATUS_REPORT, EXTENDED_SYS_STATE
 	
+	DroneManager droneManager = new DroneManager();
 	
 	long pastTime;
 	long TIMEOUT = 12000;
@@ -28,6 +29,10 @@ public class MessageHandler {
 		this.id = message.getOriginSystemId();
 		handleMessage();
 
+	}
+	
+	public void onPortClose() {
+		droneManager.clearManager();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -44,11 +49,11 @@ public class MessageHandler {
 			
 		}
 		
-		if (PortBuilder.droneMap.containsKey(id)) {
+		if (droneManager.droneExists(id)) {
 			//If the drone exists in the hashmap, just send the message through to the existing drone. 
-			PortBuilder.droneMap.get(id).newMessage(message);
+			droneManager.getDrone(id).newMessage(message);
 			
-		} else if (message.getPayload() instanceof Heartbeat && !PortBuilder.droneMap.containsKey(id)) {
+		} else if (message.getPayload() instanceof Heartbeat && !droneManager.droneExists(id)) {
 
 			// If message is a heartbeat cast it 
 			MavlinkMessage<Heartbeat> hb = (MavlinkMessage<Heartbeat>) message;
@@ -56,7 +61,7 @@ public class MessageHandler {
 			if (hb.getPayload().type().entry().equals(MavType.MAV_TYPE_QUADROTOR)) {
 				Drone drone = new Drone();
 				drone.buildDrone(id);
-				PortBuilder.droneMap.put(id, drone);
+				droneManager.addDrone(drone, id);
 				
 				ConfigComplete = false;
 				configInboundMessages(id);
@@ -94,6 +99,8 @@ public class MessageHandler {
 			
 			}else if(i>3) {
 				//!! THIS ISN'T GOING TO WORK WITH MULTIPLE SYSTEMS - FIX IT. Suggest moving it to the drone. 
+				//Update: 17/01/21 there seems to be an issue with a partially configured message interval
+				//blocking this... 
 				ConfigComplete = true;
 			}
 		
