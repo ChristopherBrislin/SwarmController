@@ -17,6 +17,7 @@ public class DroneManager {
 	
 	
 	public void addDrone(Drone drone, int id) {
+		
 		droneMap.put(id, drone);
 	}
 	

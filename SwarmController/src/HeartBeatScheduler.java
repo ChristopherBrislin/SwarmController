@@ -24,8 +24,8 @@ public class HeartBeatScheduler  extends TimerTask {
 				.systemStatus(MavState.MAV_STATE_UNINIT)
 				.mavlinkVersion(3)
 				.build();
-		
-		PortBuilder.sendMessage(heartbeat);
+		//Change to portbuilder if using serial
+		Connection.sendMessage(heartbeat);
 		if(Main.DEBUG)System.out.println("Heartbeat Sent");
 		
 	}

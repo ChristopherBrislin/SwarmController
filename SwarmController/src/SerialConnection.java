@@ -1,6 +1,3 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Timer;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -20,7 +17,7 @@ import io.dronefleet.mavlink.common.MavAutopilot;
 /**
  * Christopher Brislin 1 Nov 2020 SwarmController
  */
-public class PortBuilder{
+public class SerialConnection extends Connection{
 	
 	
 	
@@ -28,79 +25,29 @@ public class PortBuilder{
 	
 	
 	
-	
-	InputStream in;
-	OutputStream out;
-	
-	SerialPort port;
-	
-	static MavlinkConnection connection;
-	MessageHandler msgHandler = new MessageHandler();
-	
-	Timer time;
-	
+
 	
 	//Move these to somewhere more appropriate
 	
-	
-	public void setPort(SerialPort port) {
+	public SerialConnection(SerialPort port, int baud) {
 		this.port = port;
-		
-	}
-
-	
-	
-	public SerialPort[] getAvailablePorts() {
-		
-		
-		return SerialPort.getCommPorts();
-	}
-
-	public static void sendMessage(Object outMessage) {
-		try {
-			connection.send1(255, 0, outMessage);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-
-	public void closePort() {
-		
-		time.cancel();
-		time.purge();
-		port.removeDataListener();
-		port.closePort();
-		
-		
-		
-		if(Main.DEBUG)System.out.println("Close requested: " + port.closePort());
-		
-		msgHandler.onPortClose();
-		
-		
-	
-		
-	}
-	public boolean portOpen() {
-		return port.isOpen();
+		this.baudRate = baud;
+		buildConnection();
 	}
 	
-	
-
-	public void openPort() {
+	public void buildConnection() {
 
 		//this.port = port;
 		this.port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);// default parameters used for
 																				// non-blocking
 																					// serial poling
-		this.port.setBaudRate(57600);// default parameters used for data bits, parity and stop bits. To be added.
+		this.port.setBaudRate(baudRate);// default parameters used for data bits, parity and stop bits. To be added.
 		this.port.openPort();
 		in = port.getInputStream();
 		out = port.getOutputStream();
 		
 		
-		connection = MavlinkConnection
+		mavlinkConnection = MavlinkConnection
 				.builder(port.getInputStream(), port.getOutputStream())
 				.dialect(MavAutopilot.MAV_AUTOPILOT_ARDUPILOTMEGA, new ArdupilotmegaDialect())
 				.dialect(MavAutopilot.MAV_AUTOPILOT_GENERIC, new CommonDialect())
@@ -129,10 +76,10 @@ public class PortBuilder{
 					MavlinkMessage<?> message;
 					
 					
-					while ((message = connection.next()) != null && !Interface.closePort) {
+					while ((message = mavlinkConnection.next()) != null && !Interface.closePort) {
 						msgHandler.inboundMessage(message);
 					}
-					closePort();
+					closeSerialConnection();
 					
 
 				} catch (Exception ex) {
@@ -147,5 +94,38 @@ public class PortBuilder{
 		
 		
 	}
+	
+public void closeSerialConnection() {
+		
+		time.cancel();
+		time.purge();
+		port.removeDataListener();
+		port.closePort();
+		
+		
+		
+		if(Main.DEBUG)System.out.println("Close requested: " + port.closePort());
+		
+		msgHandler.onPortClose();
+		
+		
+	
+		
+	}
+	
+	
+	public SerialPort[] getAvailablePorts() {
+		
+		
+		return SerialPort.getCommPorts();
+	}
+
+	
+
+
+	
+	
+
+	
 
 }

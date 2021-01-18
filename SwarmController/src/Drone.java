@@ -130,7 +130,7 @@ public class Drone {
 		EnumSet.allOf(EkfStatusFlags.class).forEach(status -> {
 			
 			if(ekfmsg.flags().flagsEnabled(status)) {
-				if(Main.DEBUG)System.out.println(status.toString());
+				//if(Main.DEBUG)System.out.println(status.toString());
 			}
 			
 		});
@@ -219,7 +219,7 @@ public class Drone {
 				.targetComponent(0)
 				.build();
 		
-		PortBuilder.sendMessage(longMessage);
+		SerialConnection.sendMessage(longMessage);
 	}
 	
 	public void disarmDrone(int target) {
@@ -232,7 +232,7 @@ public class Drone {
 				.targetComponent(0)
 				.build();
 		
-		PortBuilder.sendMessage(longMessage);
+		SerialConnection.sendMessage(longMessage);
 		
 	}
 	

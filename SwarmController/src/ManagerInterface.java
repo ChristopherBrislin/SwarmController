@@ -1,8 +1,12 @@
+import java.awt.Component;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 
 /**
  * 
@@ -20,7 +24,11 @@ public class ManagerInterface extends DroneManager implements ActionListener{
 	JButton takeoffAll = new JButton("Takeoff All");
 	JButton rtlAll = new JButton("RTL All");
 	
+	JPanel controlContainer = new JPanel();
 	JPanel container = new JPanel();
+	
+	JTextArea messageArea = new JTextArea();
+	
 	
 	public void buildInterface() {
 		armAll.addActionListener(this);
@@ -28,12 +36,24 @@ public class ManagerInterface extends DroneManager implements ActionListener{
 		takeoffAll.addActionListener(this);
 		rtlAll.addActionListener(this);
 		
-		container.add(armAll);
-		container.add(landAll);
-		container.add(takeoffAll);
-		container.add(rtlAll);
+		controlContainer.add(armAll);
+		controlContainer.add(landAll);
+		controlContainer.add(takeoffAll);
+		controlContainer.add(rtlAll);
+		
+		controlContainer.setLayout(new GridLayout(2,0));
+		
+		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+		
+		container.add(controlContainer);
+		container.add(textArea());
 		
 		Interface.addManager(container);
+	}
+	
+	public Component textArea() {
+		messageArea.setEditable(false);
+		return messageArea;
 	}
 		
 	@Override
