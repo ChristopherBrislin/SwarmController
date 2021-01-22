@@ -29,14 +29,16 @@ public class SerialConnection extends Connection{
 	
 	//Move these to somewhere more appropriate
 	
-	public SerialConnection(SerialPort port, int baud) {
+	public SerialConnection(SerialPort port, int baud, MessageHandler handler) {
 		this.port = port;
 		this.baudRate = baud;
+		this.messageHandler = handler;
 		buildConnection();
 	}
 	
 	public void buildConnection() {
 
+		if(Main.DEBUG)System.out.println("Setting up Serial Connection with " + port + " @ " + baudRate);
 		//this.port = port;
 		this.port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);// default parameters used for
 																				// non-blocking
@@ -53,8 +55,10 @@ public class SerialConnection extends Connection{
 				.dialect(MavAutopilot.MAV_AUTOPILOT_GENERIC, new CommonDialect())
 				.build();
 		
+		messageHandler.setConnection(this);
+		
 		time = new Timer();
-		HeartBeatScheduler gcsHeartbeat = new HeartBeatScheduler();
+		HeartBeatScheduler gcsHeartbeat = new HeartBeatScheduler(messageHandler);
 		time.schedule(gcsHeartbeat, 0, 1000);
 		
 		port.addDataListener(new SerialPortDataListener() {
@@ -77,15 +81,18 @@ public class SerialConnection extends Connection{
 					
 					
 					while ((message = mavlinkConnection.next()) != null && !Interface.closePort) {
-						msgHandler.inboundMessage(message);
+						messageHandler.inboundMessage(message);
 					}
+					if(Main.DEBUG)System.out.println("Connection closing due no mavlink.next");
 					closeSerialConnection();
 					
 
 				} catch (Exception ex) {
 					time.cancel();
-					ex.printStackTrace();
 					
+					ex.printStackTrace();
+					if(Main.DEBUG)System.out.println("Connection closing due IOException");
+					closeSerialConnection();
 				} 
 			}
 			
@@ -102,11 +109,12 @@ public void closeSerialConnection() {
 		port.removeDataListener();
 		port.closePort();
 		
-		
+		//Notify Interface
+		//messageHandler.getInterface().
 		
 		if(Main.DEBUG)System.out.println("Close requested: " + port.closePort());
 		
-		msgHandler.onPortClose();
+		messageHandler.onPortClose();
 		
 		
 	

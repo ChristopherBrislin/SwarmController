@@ -16,13 +16,28 @@ public class MessageHandler {
 	int id;
 	static int i = 0;
 	MavlinkMessage<?> message;
-	static int[] mavlinkMessages = new int[] {1, 24, 165, 193, 245}; //SYS_STATUS, HWSTATUS, EKF_STATUS_REPORT, EXTENDED_SYS_STATE
+	static int[] mavlinkMessages = new int[] {1, 24, 165, 193, 245, 253}; //SYS_STATUS, HWSTATUS, EKF_STATUS_REPORT, EXTENDED_SYS_STATE, STATUSTEXT
 	
-	DroneManager droneManager = new DroneManager();
+	DroneManager droneManager;
+	Interface userInterface;
+	Connection connection;
 	
 	long pastTime;
 	long TIMEOUT = 12000;
 	static boolean ConfigComplete = true;
+	
+	public MessageHandler(Interface userInterface, DroneManager droneManager){
+		this.userInterface = userInterface;
+		
+		if(Main.DEBUG)System.out.println("Handler setup using this connection:" + connection);
+		this.droneManager = droneManager;
+		droneManager.setHandler(this);
+		
+	}
+	
+	public void setConnection(Connection connection) {
+		this.connection = connection;
+	}
 
 	public void inboundMessage(MavlinkMessage<?> message) {
 		this.message = message;
@@ -33,6 +48,19 @@ public class MessageHandler {
 	
 	public void onPortClose() {
 		droneManager.clearManager();
+	}
+	
+	public void setInterface(Interface userInterface) {
+		this.userInterface = userInterface;
+	}
+	
+	public Interface getInterface() {
+		return userInterface;
+	}
+	
+	public void sendMessage(Object outMessage) {
+		if(Main.DEBUG)System.out.println("Trying to send with: " + connection);
+		connection.sendMessage(outMessage);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -51,7 +79,7 @@ public class MessageHandler {
 		
 		if (droneManager.droneExists(id)) {
 			//If the drone exists in the hashmap, just send the message through to the existing drone. 
-			droneManager.getDrone(id).newMessage(message);
+			droneManager.distMessage(message, id);;
 			
 		} else if (message.getPayload() instanceof Heartbeat && !droneManager.droneExists(id)) {
 
@@ -59,9 +87,9 @@ public class MessageHandler {
 			MavlinkMessage<Heartbeat> hb = (MavlinkMessage<Heartbeat>) message;
 			// Check that the heartbeat originates from a Drone before creating new drone
 			if (hb.getPayload().type().entry().equals(MavType.MAV_TYPE_QUADROTOR)) {
-				Drone drone = new Drone();
-				drone.buildDrone(id);
-				droneManager.addDrone(drone, id);
+				
+				
+				droneManager.addNewDrone(id);
 				
 				ConfigComplete = false;
 				configInboundMessages(id);
@@ -92,7 +120,7 @@ public class MessageHandler {
 			
 			//
 			//PortBuilder.sendMessage(longMessage);
-			Connection.sendMessage(longMessage);
+			sendMessage(longMessage);
 			if(Main.DEBUG) System.out.println("Config Sent");
 			}
 			if(i<4) {
@@ -124,7 +152,7 @@ public class MessageHandler {
 				.build();
 		
 		//PortBuilder.sendMessage(longMessage);
-		Connection.sendMessage(longMessage);
+		sendMessage(longMessage);
 		if(Main.DEBUG)System.out.println("Config Requested");
 	
 		

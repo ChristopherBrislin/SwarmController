@@ -3,10 +3,12 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.border.Border;
 
 /**
  * 
@@ -28,7 +30,7 @@ public class ManagerInterface extends DroneManager implements ActionListener{
 	JPanel container = new JPanel();
 	
 	JTextArea messageArea = new JTextArea();
-	
+	Border border = BorderFactory.createLoweredBevelBorder();
 	
 	public void buildInterface() {
 		armAll.addActionListener(this);
@@ -53,7 +55,12 @@ public class ManagerInterface extends DroneManager implements ActionListener{
 	
 	public Component textArea() {
 		messageArea.setEditable(false);
+		messageArea.setBorder(border);
 		return messageArea;
+	}
+	
+	public void addMessage(String message) {
+		messageArea.append(message);
 	}
 		
 	@Override

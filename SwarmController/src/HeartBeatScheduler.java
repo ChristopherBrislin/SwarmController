@@ -16,6 +16,12 @@ import io.dronefleet.mavlink.common.MavType;
  */
 public class HeartBeatScheduler  extends TimerTask {
 	
+	MessageHandler handler;
+	
+	public HeartBeatScheduler(MessageHandler handler) {
+		this.handler = handler;
+	}
+	
 	public void run() {
 		
 		Heartbeat heartbeat = Heartbeat.builder()
@@ -25,7 +31,7 @@ public class HeartBeatScheduler  extends TimerTask {
 				.mavlinkVersion(3)
 				.build();
 		//Change to portbuilder if using serial
-		Connection.sendMessage(heartbeat);
+		handler.sendMessage(heartbeat);
 		if(Main.DEBUG)System.out.println("Heartbeat Sent");
 		
 	}

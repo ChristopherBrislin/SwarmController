@@ -6,7 +6,6 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -82,9 +81,15 @@ public class Interface implements ActionListener, PopupMenuListener {
 	// Serial Settings:
 	JComboBox<SerialPort> cb_ports = new JComboBox<SerialPort>();
 	JComboBox<Integer> baud_rate;
+	
+	MessageHandler messageHandler;
 
 	public void interfaceStart() {
-
+		
+		DroneManager droneManager = new DroneManager();
+		messageHandler = new MessageHandler(this, droneManager);
+		
+		
 		card = new CardLayout();
 
 		c = new Container();
@@ -110,11 +115,25 @@ public class Interface implements ActionListener, PopupMenuListener {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setMinimumSize(Const.DEFAULT_MIN_SIZE);
 		frame.add(entryPoint());
+		
 
 		managerInterface.buildInterface();
 
 		frame.setVisible(true);
 
+	}
+	
+	public void setConnection(Connection connect) {
+		this.connection = connect;
+		
+	}
+	
+	public Connection getConnection() {
+		return this.connection;
+	}
+	
+	public ManagerInterface getManager() {
+		return managerInterface;
 	}
 
 	public Component serialSettings() {
@@ -197,6 +216,9 @@ public class Interface implements ActionListener, PopupMenuListener {
 
 		container.add(controlPanel, BorderLayout.SOUTH);
 		container.add(droneContainer, BorderLayout.CENTER);
+		
+		
+		
 		return container;
 	}
 
@@ -287,7 +309,7 @@ public class Interface implements ActionListener, PopupMenuListener {
 		case ("Serial"):
 
 			connection = new SerialConnection((SerialPort) cb_ports.getSelectedItem(),
-					(int) baud_rate.getSelectedItem());
+					(int) baud_rate.getSelectedItem(), messageHandler);
 			
 			break;
 		case ("UDP"):
@@ -303,6 +325,8 @@ public class Interface implements ActionListener, PopupMenuListener {
 		default:
 			break;
 		}
+		
+		
 		if (connection.isOpen()) {
 			
 			conButton.setText("Disconnect");
@@ -311,10 +335,17 @@ public class Interface implements ActionListener, PopupMenuListener {
 		}
 
 	}
+	public void connectionStatus(boolean open) {
+		
+	}
 
 	public void closeConnection() {
 		connectionOpen = false;
 		closePort = true;
+		if(type == "TCP") {
+			
+			connection.close();
+		}
 		while(connection.isOpen()) {
 			
 		}
@@ -350,12 +381,12 @@ public class Interface implements ActionListener, PopupMenuListener {
 		case ("Debug"):
 			
 			Main.DEBUG = debug.isSelected();
-		System.out.println(Main.DEBUG);
+		
 			break;
 
 		case ("Mavlink Debug"):
 			Main.MAVLINK_DEBUG = mavlinkDebug.isSelected();
-		System.out.println(Main.MAVLINK_DEBUG);
+		
 			break;
 
 		case ("Refresh Ports"):

@@ -1,5 +1,7 @@
 import java.util.HashMap;
 
+import io.dronefleet.mavlink.MavlinkMessage;
+
 /**
  * 
  */
@@ -14,10 +16,24 @@ public class DroneManager {
 	
 	private  static HashMap<Integer, Drone> droneMap = new HashMap<Integer, Drone>();
 	
+	MessageHandler handler;
 	
-	
-	public void addDrone(Drone drone, int id) {
+	public DroneManager() {
 		
+	}
+	
+	public void setHandler(MessageHandler handler) {
+		this.handler = handler;
+	}
+	
+	public void distMessage(MavlinkMessage<?> message, int id) {
+		droneMap.get(id).newMessage(message);
+	}
+	
+	
+	
+	public void addNewDrone(int id) {
+		Drone drone = new Drone(id, handler);
 		droneMap.put(id, drone);
 	}
 	

@@ -17,8 +17,18 @@ import javax.swing.border.Border;
 /**
  * Christopher Brislin 28 Nov 2020 SwarmController
  */
-public class DroneInterface extends Drone implements ActionListener {
+public class DroneInterface implements ActionListener {
 	
+	public DroneInterface(Drone drone) {
+		this.drone = drone;
+	}
+	
+	/**
+	 * @param id
+	 * @param handler
+	 */
+	Drone drone;
+
 	JButton armDisarmButton;
 	JButton takeoffLandButton;
 
@@ -48,14 +58,12 @@ public class DroneInterface extends Drone implements ActionListener {
 	Color indColor = new Color(245, 66, 66);
 	
 	
-	int droneID;
+	
 	
 	/**
 	 * @param droneID2
 	 */
-	public DroneInterface(int droneID2) {
-		droneID = droneID2;
-	}
+	
 
 	
 
@@ -119,7 +127,7 @@ public class DroneInterface extends Drone implements ActionListener {
 		//System.out.println(cards.getSize());
 
 		Interface.addDrone(parentContainer);
-		if(Main.DEBUG)System.out.println("Drone " + droneID + " built");
+		if(Main.DEBUG)System.out.println("Drone " + drone.droneID + " built");
 
 	}
 	
@@ -164,14 +172,14 @@ public class DroneInterface extends Drone implements ActionListener {
 		
 		switch (e.getActionCommand()) {
 		case ("Arm"):
-			if(!isArmed) {
-			armDrone(droneID);
+			if(!drone.isArmed) {
+			drone.armDrone(drone.droneID);
 			}
 			
 			break;
 		case ("Disarm"):
-			if(isArmed) {
-			disarmDrone(droneID);
+			if(drone.isArmed) {
+			drone.disarmDrone(drone.droneID);
 			}
 			break;
 		case("Data"):
@@ -182,9 +190,9 @@ public class DroneInterface extends Drone implements ActionListener {
 			break;
 			
 		case("RTL"):
-			if(isArmed) {
-				if(inFlight) {
-					rtlDrone(droneID);
+			if(drone.isArmed) {
+				if(drone.inFlight) {
+					drone.rtlDrone(drone.droneID);
 				}//On the ground
 				
 			}//Not armed 
@@ -192,9 +200,9 @@ public class DroneInterface extends Drone implements ActionListener {
 			break;
 		
 		case("Takeoff"):
-			if(isArmed) {
-				if(!inFlight) {
-			takeoffDrone(droneID);
+			if(drone.isArmed) {
+				if(!drone.inFlight) {
+			drone.takeoffDrone(drone.droneID);
 			takeoffLandButton.setText("Land");
 				} //Already flying
 			} //Not armed
@@ -203,8 +211,8 @@ public class DroneInterface extends Drone implements ActionListener {
 		
 		case("Land"):
 			
-			if(inFlight) {
-				landDrone(droneID);
+			if(drone.inFlight) {
+				drone.landDrone(drone.droneID);
 				takeoffLandButton.setText("Takeoff");
 			}
 			
